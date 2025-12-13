@@ -82,11 +82,11 @@ export default function VoiceAssistant({ onCommand }) {
   return (
     <button
       onClick={toggleListening}
-      className={`bg-blue-600 text-white px-4 py-2 rounded-full transition ${
-        listening ? "animate-pulse" : ""
+      className={`bg-blue-600 text-white px-3 py-2 rounded-full transition ${
+        listening ? "animate-pulse " : ""
       }`}
     >
-      {listening ? "Listening…" : "Voice Command"}
+      {listening ? "Listening…" : <i class="fa-solid fa-microphone"></i>}
     </button>
   );
 }
