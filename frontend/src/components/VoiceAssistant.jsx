@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { callGemini } from "../api/gemini";
-import { voicePrompt } from "../prompts/prompts";
+import { runAssistant } from "../../assistantBrain";
 
 export default function VoiceAssistant({ onCommand }) {
   const recognitionRef = useRef(null);
   const [listening, setListening] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
-  // INIT SPEECH RECOGNITION (ONCE)
   useEffect(() => {
     if (!("webkitSpeechRecognition" in window)) {
       console.error("Speech Recognition not supported");
@@ -15,23 +14,25 @@ export default function VoiceAssistant({ onCommand }) {
 
     const recognition = new window.webkitSpeechRecognition();
     recognition.lang = "en-IN";
-    recognition.continuous = false; // VERY IMPORTANT
+    recognition.continuous = false;
     recognition.interimResults = false;
 
     recognition.onresult = async (event) => {
       const text = event.results[0][0].transcript.trim();
       console.log("User said:", text);
 
-      // stop mic immediately
       recognition.stop();
       setListening(false);
+      setProcessing(true);
 
       await handleVoiceCommand(text);
+      setProcessing(false);
     };
 
     recognition.onerror = (e) => {
       console.error("Speech error:", e);
       setListening(false);
+      setProcessing(false);
     };
 
     recognitionRef.current = recognition;
@@ -39,54 +40,66 @@ export default function VoiceAssistant({ onCommand }) {
     return () => recognition.stop();
   }, []);
 
-  // HANDLE VOICE → AI → ACTION
   async function handleVoiceCommand(text) {
     try {
-      const jsonRes = await callGemini(voicePrompt(text));
+      const result = await runAssistant(text);
 
-      const action = JSON.parse(jsonRes);
-      onCommand(action);
+      if (onCommand) {
+        onCommand({
+          action: result.intent,
+          reply: result.reply,
+          data: result.memory
+        });
+      }
 
-      speakResponse(
-        action.reply || "Your request has been processed."
-      );
+      speakResponse(result.reply);
     } catch (err) {
-      console.error("Voice parse error");
-      speakResponse("I understood your request, but need clarification.");
+      console.error("Voice processing error:", err);
+      speakResponse("I apologize for the inconvenience. Please try again.");
     }
   }
 
-  // TEXT → SPEECH
   function speakResponse(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleanText = text
+      .replace(/[₹]/g, " rupees ")
+      .replace(/[•]/g, "")
+      .replace(/\n+/g, ". ")
+      .substring(0, 500);
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = "en-IN";
-    utterance.rate = 0.95;
+    utterance.rate = 0.92;
     utterance.pitch = 1;
     window.speechSynthesis.speak(utterance);
   }
 
-  // BUTTON HANDLER
   function toggleListening() {
     if (!recognitionRef.current) return;
 
-    if (!listening) {
+    if (!listening && !processing) {
       setListening(true);
       recognitionRef.current.start();
-    } else {
+    } else if (listening) {
       setListening(false);
       recognitionRef.current.stop();
     }
   }
 
-  // UI (DO NOT REMOVE)
   return (
     <button
       onClick={toggleListening}
+      disabled={processing}
       className={`bg-blue-600 text-white px-3 py-2 rounded-full transition ${
-        listening ? "animate-pulse " : ""
-      }`}
+        listening ? "animate-pulse bg-red-500" : ""
+      } ${processing ? "opacity-50 cursor-not-allowed" : ""}`}
     >
-      {listening ? "Listening…" : <i class="fa-solid fa-microphone"></i>}
+      {processing ? (
+        <i className="fa-solid fa-spinner fa-spin"></i>
+      ) : listening ? (
+        "Listening…"
+      ) : (
+        <i className="fa-solid fa-microphone"></i>
+      )}
     </button>
   );
 }

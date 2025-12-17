@@ -27,7 +27,42 @@ Generate professional loan offer in ≤50 words.
 `;
 
 export const voicePrompt = (command) => `
-You are LoanBot’s voice assistant.
+You are LoanBot's voice assistant.
 User command: "${command}"
 Return JSON: { "action": "CONSULTANT|PLANNER|ECOLOAN|OFFERS", "text": "[Optional]" }
+`;
+
+export const intentExtractionPrompt = (userMessage) => `
+You are an intent classification system for EY FlowBot, a professional banking loan assistant.
+
+Analyze the user's message and extract:
+1. The primary intent
+2. Any loan-related entities mentioned
+
+INTENTS (choose exactly ONE):
+- PLANNER: User wants to plan loan repayment, calculate EMI, understand loan terms, or schedule payments
+- RISK: User asks about eligibility, credit score, risk assessment, or affordability
+- OFFERS: User wants to see loan offers, rates, compare products, or finalize a loan
+- ESG: User mentions green loans, sustainability, solar, eco-friendly, or environmental benefits
+- CONSULTANT: User wants document review, statement analysis, or general banking advice
+
+ENTITIES to extract (use null if not mentioned):
+- income: Monthly income in INR (number only, no currency symbols)
+- loanType: Type of loan (home, car, personal, business, education)
+- tenure: Loan duration in months (number only)
+- amount: Loan amount in INR (number only, no currency symbols)
+
+User message: "${userMessage}"
+
+Respond ONLY with valid JSON, no explanation:
+{
+  "intent": "PLANNER|RISK|OFFERS|ESG|CONSULTANT",
+  "confidence": 0.0-1.0,
+  "entities": {
+    "income": null,
+    "loanType": null,
+    "tenure": null,
+    "amount": null
+  }
+}
 `;

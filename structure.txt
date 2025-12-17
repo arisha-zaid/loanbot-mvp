@@ -1,0 +1,8 @@
+
+frontend/src/components/ "VoiceAssistant.jsx" "Consultant.jsx" "Dashboard.jsx" "Ecoloan.jsx" "Navbar.jsx" "Offers.jsx" "Planner.jsx" 
+frontend/src/api/ "gemini.js"
+frontend/src/agent/ "riskAgent.js" "coordinator.js" "esgAgent.js" "offersAgent.js" "plannerAgent.js" 
+frontend/src/prompts/ "prompts.js"
+frontend/src/ "styles.css" "App.css" "App.jsx" "index.css" "main.jsx" 
+frontend/ "vite.config.js" ".gitignore" "assistantBrain.js" "eslint.config.js" "index.html" "package.json" "package-lock.json" "postcss.config.js" "README.md" "tailwind.config.js" 
+backend/ "server.js" ".env" ".gitignore" "generateReceipt.js" "package.json" "package-lock.json" 
